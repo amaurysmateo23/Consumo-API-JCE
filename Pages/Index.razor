@@ -1,0 +1,155 @@
+﻿@page "/"
+@using Tarea5.Data
+@using Microsoft.AspNetCore.Identity
+@inject NavigationManager NavigationManager
+@inject ServicioSecretos servicio
+@inject IHttpContextAccessor httpContextAccessor
+<AuthorizeView>
+    <Authorized>
+
+        <h3>Bienvenido!</h3>
+
+        <div class="container">
+
+            @*<div class="row">
+                <p>
+                    <img class="rounded-Thumbnail" align="left" height="100" width="100"
+                         asp-append-version="true" src="@usuario.foto" /> <b>Nombres: </b> @usuario.Nombres <br><b> Primer Apellidos: </b>@usuario.Apellido1 <b><br /> Segundo Apellidos: </b> @usuario.Apellido2
+                    </p>
+
+                </div>*@
+            <center>
+                <div class="card" style="width: 150px; height: 180px;">
+                    <img src="@usuario.foto" class="card-img-top" alt="">
+                    <div class="card-body">
+                        <h5 class="card-title">My Info</h5>
+                        <p class="card-text"></p>
+                    </div>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item">Nombres: @usuario.Nombres</li>
+                        <li class="list-group-item">Apellido 1: @usuario.Apellido1</li>
+                        <li class="list-group-item">Apellido 2: @usuario.Apellido2</li>
+                    </ul>
+                    <div class="card-body">
+
+
+                    </div>
+                    <button type="button" class="btn btn-dark" data-toggle="modal" data-target="#exampleModal">Agregar Secreto</button>
+
+                    <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="exampleModalLabel">Agregando un secreto...</h5>
+                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                </div>
+                                <div class="modal-body">
+                                    <div>
+                                        <div>
+                                            <div>
+                                                <div class="p-3 mb-3 bg-dark text-white text-center">Ingrese los detalles</div>
+                                                <div>
+                                                    <form>
+                                                        <div class="form-group">
+                                                            <label for="titulo">Titulo</label>
+                                                            <input type="text" id="titulo" class="form-control" @bind="@NewSecreto.Titulo" required />
+                                                        </div>
+                                                        <div class="form-group">
+                                                            <label for="fecha">Fecha</label>
+                                                            <input type="date" id="fecha" class="form-control" @bind="@NewSecreto.Fecha" required />
+                                                        </div>
+                                                        <div class="form-group">
+                                                            <label for="valor_monetario">Valor Monetario</label>
+                                                            <input type="number" id="valor_monetario" class="form-control" @bind="@NewSecreto.Valor_Monetario" required />
+                                                        </div>
+                                                        <div class="form-group">
+                                                            <label for="lugar">Lugar</label>
+                                                            <input type="text" id="lugar" class="form-control" @bind="@NewSecreto.Lugar" required />
+                                                        </div>
+                                                        <div class="form-group">
+                                                            <label for="quantity">Descripcion</label>
+                                                            <textarea type="text" id="descripcion" class="form-control" @bind="@NewSecreto.Descripcion" required />
+                                                        </div>
+                                                        <div class="form-group">
+                                                            <label for="Description">Latitud</label>
+                                                            <input type="text" id="Description" class="form-control" @bind="@NewSecreto.Latitud" required />
+                                                        </div>
+                                                        <div class="form-group">
+                                                            <label for="Description">Longitud</label>
+                                                            <input type="text" id="Description" class="form-control" @bind="@NewSecreto.Longitud" required />
+                                                        </div>
+
+                                                        <div class="text-center p-3 mb-3">
+                                                            <button class="btn btn-dark" @onclick="AgregarNewSecreto">Agregar secreto</button>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </center>
+            </div>
+
+        </Authorized>
+      <NotAuthorized>
+        <center>
+            <h1>Inicia sesion para visualizar el contenido.</h1>
+            <br/><br/>
+          <p>
+            Debes iniciar sesion para poder ver tus secretos.
+        </p>
+        </center>
+      
+    </NotAuthorized>
+    </AuthorizeView>
+  
+
+@code {
+    public string BuscadorCed;
+    Usuarios usuario;
+    List<Secretos> Secretos_de_usuarios = new List<Secretos>();
+    protected override async Task OnInitializedAsync()
+    {
+        BuscadorCed = httpContextAccessor.HttpContext.User.Identity.Name;
+        await Refrescar();
+    }
+    private async Task Refrescar()
+    {
+        Secretos_de_usuarios = await servicio.ObtenerSecretosAsync();
+        usuario = await servicio.ObtenerInfo(BuscadorCed);
+    }
+
+
+    private void Navegar( Secretos secreto)
+    {
+        NavigationManager.NavigateTo("/Secreto/"+secreto.SecretosId);
+    }
+   
+    public Secretos NewSecreto { get; set; } = new Secretos();
+
+    private async Task AgregarNewSecreto()
+    {
+        NewSecreto.UsuariosId = usuario.Id;
+        await servicio.AgregarSecretoAsync(NewSecreto);
+        NewSecreto = new Secretos();
+
+        await Refrescar();
+    }
+
+    List<Secretos> Secretosusuarios = new List<Secretos>();
+
+    private void Navegare(Secretos secreto)
+    {
+        NavigationManager.NavigateTo("/Secreto/" + secreto.SecretosId);
+    }
+}
